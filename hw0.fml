@@ -1,0 +1,222 @@
+function pyramid(height) -> begin
+    if (height < 1) then
+        print("Height must be at least 1.\n")
+    else begin
+        let width = 2 * height - 1;
+        let start = height;
+        let e = height;
+
+        while height > 0 do begin
+            let i = 1;
+            while i <= width do begin
+                if i < start | i > e then
+                    print(" ")
+                else
+                    print("*");
+                i <- i + 1;
+            end;
+            print("\n");
+            start <- start - 1;
+            e <- e + 1;
+            height <- height - 1
+        end
+    end
+end;
+
+function fibonacci(i) -> begin
+    let res = 0;
+    if i == 1 then
+        res <- 1;
+    if i > 1 then
+        res <- fibonacci(i - 1) + fibonacci(i - 2);
+
+    res
+end;
+
+function realoc(arr, old_size, new_size) -> begin 
+    if new_size < 0 then
+        print("Allocated size should be at least 0")
+    else begin 
+        let arr2 = array(new_size, null);
+        let size = if old_size < new_size then old_size else new_size;
+
+        while size > 0 do begin 
+            size <- size - 1;
+            arr2[size] <- arr[size];
+        end;
+        arr2
+    end
+end;
+
+function new_stack() -> object begin 
+    let size = 0;
+    let top = -1;
+    let arr = array(0, null);
+    function peek() -> begin 
+        if this.top < 0 then
+            print("No object on the stack")
+        else
+            this.arr[this.top]
+    end;
+    function pop() -> begin 
+        if this.top < 0 then
+            print("Stack is empty")
+        else
+            this.top <- this.top - 1;
+            this.arr[this.top + 1]
+    end;
+    function push(x) -> begin
+        this.top <- this.top + 1;
+        if this.top >= this.size then begin
+            let new_size = if this.size != 0 then this.size * 2 else 1;
+            this.arr <- realoc(this.arr, this.size, new_size);
+            this.size <- new_size
+        end;
+        this.arr[this.top] <- x
+    end
+end;
+
+function roman(x) -> object extends x begin
+    let val = x;
+    function print_decimal() -> begin 
+        print("~\n", this.val);
+    end;
+    function print_roman() -> begin 
+        this.print_helper(this.val);
+        print("\n")
+    end;
+    function print_helper(v) -> begin 
+        if v > 0 then
+            if v >= 1000 then begin 
+                print("M");
+                this.print_helper(v - 1000)
+            end else
+            if v >= 900 then begin 
+                print("CM");
+                this.print_helper(v - 900)
+            end else
+            if v >= 500 then begin 
+                print("D");
+                this.print_helper(v - 500)
+            end else
+            if v >= 400 then begin 
+                print("CD");
+                this.print_helper(v - 400)
+            end else
+            if v >= 100 then begin 
+                print("C");
+                this.print_helper(v - 100)
+            end else
+            if v >= 90 then begin 
+                print("XC");
+                this.print_helper(v - 90)
+            end else
+            if v >= 50 then begin 
+                print("L");
+                this.print_helper(v - 50)
+            end else
+            if v >= 40 then begin 
+                print("XL");
+                this.print_helper(v - 40)
+            end else
+            if v >= 10 then begin 
+                print("X");
+                this.print_helper(v - 10)
+            end else
+            if v >= 9 then begin 
+                print("IX");
+                this.print_helper(v - 9)
+            end else
+            if v >= 5 then begin 
+                print("V");
+                this.print_helper(v - 5)
+            end else
+            if v >= 4 then begin 
+                print("IV");
+                this.print_helper(v - 4)
+            end else
+            if v >= 1 then begin 
+                print("I");
+                this.print_helper(v - 1)
+            end
+    end
+end;
+
+function test_roman() -> begin
+    print("===== TEST ROMAN =====\n");
+    let a = roman(1);
+    a.print_decimal();
+    a.print_roman();
+    a <- roman(3);
+    a.print_decimal();
+    a.print_roman();
+    a <- roman(7);
+    a.print_decimal();
+    a.print_roman();
+    a <- roman(8);
+    a.print_decimal();
+    a.print_roman();
+    a <- roman(666);
+    a.print_decimal();
+    a.print_roman();
+    a <- roman(42);
+    a.print_decimal();
+    a.print_roman();
+    a <- roman(14000);
+    a.print_decimal();
+    a.print_roman();
+    print("===== TEST ROMAN OK ===\n");
+end;
+
+function test_realoc() -> begin 
+    print("===== TEST REALOC =====\n");
+    let a = realoc(array(1, 1), 1, 2);
+    print("~\n", a[0]);
+    print("~\n\n", a[1]);
+    a[1] <- 2;
+    a <- realoc(a, 2, 4);
+    print("~\n", a[0]);
+    print("~\n", a[1]);
+    print("~\n", a[2]);
+    print("~\n", a[3]);
+    print("===== TEST REALOC OK ===\n");
+end;
+
+function test_stack() -> begin 
+    print("===== TEST STACK =====\n");
+    let s = new_stack();
+    s.push(1);
+    print("~\n", s.peek());
+    print("~\n\n", s.pop());
+
+    s.push(1);
+    s.push(2);
+    s.push(3);
+    print("~\n", s.peek());
+    print("~\n", s.pop());
+    print("~\n", s.peek());
+    print("~\n", s.pop());
+    print("~\n", s.peek());
+    print("~\n\n", s.pop());
+
+    s.push(1);
+    s.push(2);
+    s.pop();
+    s.push(3);
+    print("~\n", s.peek());
+    print("~\n", s.pop());
+    print("~\n", s.peek());
+    print("~\n", s.pop());
+    print("===== TEST STACK OK ===\n");
+end;
+
+pyramid(10);
+let fib = 0;
+let x = 0;
+x <- 7;
+fib <- fibonacci(7);
+print("Fibonaci of ~ is ~\n", x, fib);
+
+test_realoc();
+test_stack();
+test_roman();
