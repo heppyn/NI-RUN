@@ -9,6 +9,14 @@ class ExecVisitor : public Visitor {
     void visit(const ast::Print* visitable) const override;
     void visit(const ast::CallMethod* visitable) const override;
     void visit(const ast::Integer* visitable) const override;
+    void visit(const ast::Boolean* visitable) const override;
+    void visit(const ast::Null* visitable) const override;
+    void visit(const ast::Variable* visitable) const override;
+    void visit(const ast::AccessVariable* visitable) const override;
+    void visit(const ast::AssignVariable* visitable) const override;
+    void visit(const ast::Function* visitable) const override;
+    void visit(const ast::CallFunction* visitable) const override;
+    void visit(const ast::Block* visitable) const override;
 };
 
 
