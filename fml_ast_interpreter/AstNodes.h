@@ -9,20 +9,34 @@ class Visitor;
 namespace ast {
 struct AST {
     virtual ~AST() = default;
-    virtual void accept(const Visitor*) const = 0;
+    virtual std::unique_ptr<AST> accept(const Visitor*) const = 0;
+    virtual std::string toString() const { return "AST"; }
 };
 template<typename Derived>
 struct VisitableAST : AST {
-    void accept(const Visitor* visitor) const override;
+    std::unique_ptr<AST> accept(const Visitor* visitor) const override;
 };
 
 struct Integer : public VisitableAST<Integer> {
+    Integer() = default;
+    explicit Integer(int i) : value(i) {}
+    [[nodiscard]] std::string toString() const override {
+        return std::to_string(value);
+    }
     int value{};
 };
 struct Boolean : public VisitableAST<Boolean> {
+    Boolean() = default;
+    explicit Boolean(bool val) : value(val) {}
+    [[nodiscard]] std::string toString() const override {
+        return value ? "true" : "false";
+    }
     bool value{};
 };
 struct Null : public VisitableAST<Null> {
+    [[nodiscard]] std::string toString() const override {
+        return "null";
+    }
 };
 struct Variable : public VisitableAST<Variable> {
     std::string name{};
@@ -72,24 +86,24 @@ struct Top : public VisitableAST<Top> {
 
 class Visitor {
   public:
-    virtual void visit(const ast::Top* visitable) const = 0;
-    virtual void visit(const ast::Print* visitable) const = 0;
-    virtual void visit(const ast::CallMethod* visitable) const = 0;
-    virtual void visit(const ast::Integer* visitable) const = 0;
-    virtual void visit(const ast::Boolean* visitable) const = 0;
-    virtual void visit(const ast::Null* visitable) const = 0;
-    virtual void visit(const ast::Variable* visitable) const = 0;
-    virtual void visit(const ast::AccessVariable* visitable) const = 0;
-    virtual void visit(const ast::AssignVariable* visitable) const = 0;
-    virtual void visit(const ast::Function* visitable) const = 0;
-    virtual void visit(const ast::CallFunction* visitable) const = 0;
-    virtual void visit(const ast::Block* visitable) const = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::Top* visitable) const = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::Print* visitable) const = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::CallMethod* visitable) const = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::Integer* visitable) const = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::Boolean* visitable) const = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::Null* visitable) const = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::Variable* visitable) const = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::AccessVariable* visitable) const = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::AssignVariable* visitable) const = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::Function* visitable) const = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::CallFunction* visitable) const = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::Block* visitable) const = 0;
 };
 
 namespace ast {
 template<typename Derived>
-void VisitableAST<Derived>::accept(const Visitor* visitor) const {
-    visitor->visit(static_cast<const Derived*>(this));
+std::unique_ptr<AST> VisitableAST<Derived>::accept(const Visitor* visitor) const {
+    return visitor->visit(static_cast<const Derived*>(this));
 }
 } // namespace ast
 
