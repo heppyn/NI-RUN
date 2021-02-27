@@ -9,7 +9,7 @@ std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Top* v) const {
         s->accept(this);
     }
 
-    return nullptr;
+    return std::make_unique<ast::Null>();
 }
 
 std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Print* v) const {
@@ -71,18 +71,21 @@ std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Null*) const {
 }
 std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Variable* visitable) const {
     std::cout << "Visiting Variable" << std::endl;
-    (void)visitable;
-    return nullptr;
+    auto val = evaluate(visitable->value.get());
+    m_env->define(visitable->name, evaluate(val.get()));
+    // TODO: check if this is ok - should evaluate to int, bool, null
+    return val;
 }
 std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::AccessVariable* visitable) const {
     std::cout << "Visiting AccessVariable" << std::endl;
-    (void)visitable;
-    return nullptr;
+    // Should be basically clone
+    return evaluate(m_env->get(visitable->name));
 }
 std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::AssignVariable* visitable) const {
     std::cout << "Visiting AssignVariable" << std::endl;
-    (void)visitable;
-    return nullptr;
+    auto val = evaluate(visitable->value.get());
+    m_env->set(visitable->name, evaluate(val.get()));
+    return val;
 }
 std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Function* visitable) const {
     std::cout << "Visiting Function" << std::endl;

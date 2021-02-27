@@ -1,1 +1,4 @@
-print("x\n");
+print("Hello ~ ~ ~", 1, false, null);
+let a = 1;
+a <- 2;
+print("Value of a is ~", a)
