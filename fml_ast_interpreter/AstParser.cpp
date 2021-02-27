@@ -25,7 +25,7 @@ rapidjson::Document AstParser::loadJson(std::string_view path) {
     return document;
 }
 
-std::vector<std::unique_ptr<ast::AST>> AstParser::parseNodes(const rapidjson::Value &nodes) {
+std::vector<std::unique_ptr<ast::AST>> AstParser::parseNodes(const rapidjson::Value& nodes) {
     std::vector<std::unique_ptr<ast::AST>> res{};
     assert(nodes.IsArray());
 
@@ -68,5 +68,3 @@ ast::AST* AstParser::parseNode(const rapidjson::Value& node) {
     std::cerr << "Unrecognised token" << std::endl;
     throw std::invalid_argument("Unrecognised token");
 }
-
-

@@ -4,7 +4,7 @@
 #include "../AstNodes.h"
 
 class ExecVisitor : public Visitor {
-public:
+  public:
     void visit(const ast::Top* visitable) const override;
     void visit(const ast::Print* visitable) const override;
     void visit(const ast::CallMethod* visitable) const override;

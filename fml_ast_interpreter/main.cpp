@@ -1,4 +1,3 @@
-#include <iostream>
 #include "AstParser.h"
 #include "visitors/ExecVisitor.h"
 
