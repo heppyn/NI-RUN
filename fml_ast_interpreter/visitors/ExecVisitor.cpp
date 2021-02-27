@@ -2,46 +2,65 @@
 #include <iostream>
 #include <memory>
 
-std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Top* v) const {
-    std::cout << "Visiting Top" << std::endl;
-    std::cout << "Size of stms: " << v->stms.size() << std::endl;
-    for (const auto& s : v->stms) {
-        s->accept(this);
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Top* v) {
+    //    std::cout << "Visiting Top" << std::endl;
+    //    std::cout << "Size of stms: " << v->stms.size() << std::endl;
+    size_t i = 0;
+    for (; i < v->stms.size() - 1; i++) {
+        evaluate(v->stms[i].get());
     }
+    auto res = evaluate(v->stms[i].get());
 
-    return std::make_unique<ast::Null>();
+    return res;
 }
 
-std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Print* v) const {
-    std::cout << "Visiting Print" << std::endl;
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Print* v) {
+    //    std::cout << "Visiting Print. Format: '"<< v->format << "'\n";
+    // count expected args
+    unsigned int expArgs = 0;
+    for (const auto c : v->format) {
+        if (c == '~')
+            expArgs++;
+    }
+    if (expArgs != v->arguments.size()) {
+        std::cerr << "Provided wrong number of arguments to print. "
+                  << "Provided: " << v->arguments.size() << " expected: " << expArgs << '\n';
+        throw std::invalid_argument("Provided wrong number of arguments to print");
+    }
+    // Evaluate args first
+    std::vector<std::unique_ptr<ast::AST>> eval;
+    eval.reserve(expArgs);
+    for (const auto& argument : v->arguments) {
+        eval.emplace_back(evaluate(argument.get()));
+    }
+
     size_t args = 0;
     for (size_t i = 0; i < v->format.size(); i++) {
         if (v->format[i] == '~') {
-            std::cout << evaluate(v->arguments[args].get())->toString();
+            std::cout << eval[args]->toString();
             args++;
             continue;
         }
         if (v->format[i] == '\\') {
-            if (i + 2 < v->format.size() && v->format[i + 1] == '\\') {
-                if (v->format[i + 2] == '~') {
+            if (i + 1 < v->format.size()) {
+                if (v->format[i + 1] == '~') {
                     std::cout << "~";
                 }
-                else if (v->format[i + 2] == 'n') {
+                else if (v->format[i + 1] == 'n') {
                     std::cout << "\n";
                 }
-                else if (v->format[i + 2] == 't') {
+                else if (v->format[i + 1] == 't') {
                     std::cout << "\t";
                 }
-                else if (i + 3 < v->format.size() && v->format[i + 2] == '\\' && v->format[i + 3] == '\\') {
+                else if (v->format[i + 1] == '\\') {
                     std::cout << "\\";
-                    i += 1;
                 }
                 else {
                     std::cerr << "Incorrect escape char: '"
-                              << v->format[i + 2] << "' in " << v->format << '\n';
+                              << v->format[i + 1] << "' in " << v->format << '\n';
                     throw std::invalid_argument("Incorrect escape char");
                 }
-                i += 2;
+                i += 1;
             }
             else {
                 std::cerr << "Incorrect format string: '" << v->format << "'\n";
@@ -54,58 +73,86 @@ std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Print* v) const {
     return std::unique_ptr<ast::Null>();
 }
 
-std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::CallMethod* visitable) const {
-    std::cout << "Visiting CallMethod" << std::endl;
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::CallMethod* visitable) {
+    //    std::cout << "Visiting CallMethod" << std::endl;
     (void)visitable;
     return nullptr;
 }
 
-std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Integer* visitable) const {
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Integer* visitable) {
     return std::make_unique<ast::Integer>(visitable->value);
 }
-std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Boolean* visitable) const {
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Boolean* visitable) {
     return std::make_unique<ast::Boolean>(visitable->value);
 }
-std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Null*) const {
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Null*) {
     return std::make_unique<ast::Null>();
 }
-std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Variable* visitable) const {
-    std::cout << "Visiting Variable" << std::endl;
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Variable* visitable) {
+    //    std::cout << "Visiting Variable" << std::endl;
     auto val = evaluate(visitable->value.get());
-    m_env->define(visitable->name, evaluate(val.get()));
-    // TODO: check if this is ok - should evaluate to int, bool, null
+    m_env->define(visitable->name, val->clone());
     return val;
 }
-std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::AccessVariable* visitable) const {
-    std::cout << "Visiting AccessVariable" << std::endl;
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::AccessVariable* visitable) {
+    //    std::cout << "Visiting AccessVariable" << std::endl;
     // Should be basically clone
     return evaluate(m_env->get(visitable->name));
 }
-std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::AssignVariable* visitable) const {
-    std::cout << "Visiting AssignVariable" << std::endl;
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::AssignVariable* visitable) {
+    //    std::cout << "Visiting AssignVariable" << std::endl;
     auto val = evaluate(visitable->value.get());
     m_env->set(visitable->name, evaluate(val.get()));
     return val;
 }
-std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Function* visitable) const {
-    std::cout << "Visiting Function" << std::endl;
-    (void)visitable;
-    return nullptr;
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Function* visitable) {
+    //    std::cout << "Visiting Function" << std::endl;
+    m_env->define(visitable->name, visitable->clone());
+    return std::make_unique<ast::Null>();
 }
-std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::CallFunction* visitable) const {
-    std::cout << "Visiting CallFunction" << std::endl;
-    (void)visitable;
-    return nullptr;
-}
-std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Block* visitable) const {
-    std::cout << "Visiting Block" << std::endl;
-    (void)visitable;
-    for (const auto& s : visitable->stms) {
-        s->accept(this);
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::CallFunction* visitable) {
+    //    std::cout << "Visiting CallFunction" << std::endl;
+    auto* func = dynamic_cast<const ast::Function*>(m_env->get(visitable->name));
+    if (func->parameters.size() != visitable->arguments.size()) {
+        std::cerr << "Provided wrong number of arguments. Provided: " << visitable->arguments.size()
+                  << " Expected: " << func->parameters.size() << '\n';
+        // TODO: Fix - potentially leaking environments. Set has error instead of throw
+        throw std::invalid_argument("Provided wrong number of arguments");
+    }
+    beginScope();
+    for (size_t i = 0; i < func->parameters.size(); i++) {
+        // define parameters as new vars
+        m_env->define(func->parameters[i], evaluate(visitable->arguments[i].get()));
     }
 
-    return nullptr;
+    // execute function body
+    auto res = evaluate(func->body.get());
+
+    endScope();
+    return res;
 }
-std::unique_ptr<ast::AST> ExecVisitor::evaluate(const ast::AST* stm) const {
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Block* visitable) {
+    //    std::cout << "Visiting Block" << std::endl;
+    beginScope();
+    size_t i = 0;
+    for (; i < visitable->stms.size() - 1; i++) {
+        evaluate(visitable->stms[i].get());
+    }
+    auto res = evaluate(visitable->stms[i].get());
+
+    endScope();
+    return res;
+}
+std::unique_ptr<ast::AST> ExecVisitor::evaluate(const ast::AST* stm) {
     return stm->accept(this);
+}
+void ExecVisitor::beginScope() {
+    m_env->setParent(m_env_prev);
+    m_env_prev = m_env;
+    m_env = new Environment(m_env_prev);
+}
+void ExecVisitor::endScope() {
+    delete m_env;
+    m_env = m_env_prev;
+    m_env_prev = m_env->getParent();
 }

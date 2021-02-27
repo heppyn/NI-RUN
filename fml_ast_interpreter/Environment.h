@@ -18,6 +18,8 @@ class Environment {
     void define(std::string name, std::unique_ptr<ast::AST> value);
     void set(const std::string& name, std::unique_ptr<ast::AST> value);
     [[nodiscard]] const ast::AST* get(const std::string& name) const;
+    [[nodiscard]] Environment* getParent() const;
+    void setParent(Environment* env);
 };
 
 

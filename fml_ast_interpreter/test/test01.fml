@@ -1,4 +1,12 @@
-print("Hello ~ ~ ~", 1, false, null);
+print("Hello ~ ~ ~\n", 1, false, null);
 let a = 1;
 a <- 2;
-print("Value of a is ~", a)
+print("Value of a is ~\n", a);
+
+function f(a) -> begin
+    print("Executing function f\n");
+    let b = null;
+    b <- a;
+end;
+
+print("Value returned from f: ~\n", f(5));

@@ -35,7 +35,7 @@ std::vector<std::unique_ptr<ast::AST>> AstParser::parseNodes(const rapidjson::Va
         }
         else {
             assert(itr->IsString());
-            std::cout << "Non object type: " << itr->GetString() << '\n';
+            //            std::cout << "Non object type: " << itr->GetString() << '\n';
             res.emplace_back(parseNode(itr->GetString()));
         }
     }

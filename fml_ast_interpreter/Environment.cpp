@@ -37,3 +37,9 @@ const ast::AST* Environment::get(const std::string& name) const {
 
     return ptr->second.get();
 }
+Environment* Environment::getParent() const {
+    return m_parent;
+}
+void Environment::setParent(Environment* env) {
+    m_parent = env;
+}
