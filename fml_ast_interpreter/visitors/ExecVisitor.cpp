@@ -143,6 +143,19 @@ std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Block* visitable) {
     endScope();
     return res;
 }
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Loop* visitable) {
+    std::unique_ptr<ast::AST> res = std::make_unique<ast::Null>();
+    while (evaluate(visitable->condition.get())->isTruthy()) {
+        res = evaluate(visitable->body.get());
+    }
+    return res;
+}
+std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Conditional* visitable) {
+    if (evaluate(visitable->condition.get())->isTruthy()) {
+        return evaluate(visitable->consequent.get());
+    }
+    return evaluate(visitable->alternative.get());
+}
 std::unique_ptr<ast::AST> ExecVisitor::evaluate(const ast::AST* stm) {
     return stm->accept(this);
 }

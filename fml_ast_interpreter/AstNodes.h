@@ -12,6 +12,7 @@ struct AST {
     virtual std::unique_ptr<AST> accept(Visitor*) const = 0;
     [[nodiscard]] virtual std::string toString() const { return "AST"; }
     [[nodiscard]] virtual std::unique_ptr<AST> clone() const = 0;
+    [[nodiscard]] virtual bool isTruthy() const { return true; }
 };
 template<typename Derived>
 struct VisitableAST : AST {
@@ -25,6 +26,7 @@ struct Integer : public VisitableAST<Integer> {
     [[nodiscard]] std::string toString() const override {
         return std::to_string(value);
     }
+
     int value{};
 };
 struct Boolean : public VisitableAST<Boolean> {
@@ -34,6 +36,8 @@ struct Boolean : public VisitableAST<Boolean> {
     [[nodiscard]] std::string toString() const override {
         return value ? "true" : "false";
     }
+    [[nodiscard]] bool isTruthy() const override { return value; }
+
     bool value{};
 };
 struct Null : public VisitableAST<Null> {
@@ -41,24 +45,28 @@ struct Null : public VisitableAST<Null> {
     [[nodiscard]] std::string toString() const override {
         return "null";
     }
+    [[nodiscard]] bool isTruthy() const override { return false; }
 };
 struct Variable : public VisitableAST<Variable> {
     Variable() = default;
     Variable(std::string name, std::unique_ptr<AST> value);
     [[nodiscard]] std::unique_ptr<AST> clone() const override;
+
     std::string name{};
     std::unique_ptr<AST> value{};
 };
 struct AccessVariable : public VisitableAST<AccessVariable> {
     AccessVariable() = default;
-    AccessVariable(std::string name);
+    explicit AccessVariable(std::string name);
     [[nodiscard]] std::unique_ptr<AST> clone() const override;
+
     std::string name{};
 };
 struct AssignVariable : public VisitableAST<AssignVariable> {
     AssignVariable() = default;
     AssignVariable(std::string name, std::unique_ptr<AST> value);
     [[nodiscard]] std::unique_ptr<AST> clone() const override;
+
     std::string name{};
     std::unique_ptr<AST> value{};
 };
@@ -66,6 +74,7 @@ struct Function : public VisitableAST<Function> {
     Function() = default;
     Function(std::string name, std::vector<std::string> parameters, std::unique_ptr<AST> body);
     [[nodiscard]] std::unique_ptr<AST> clone() const override;
+
     std::string name{};
     std::vector<std::string> parameters{};
     std::unique_ptr<AST> body{};
@@ -74,6 +83,7 @@ struct CallFunction : public VisitableAST<CallFunction> {
     CallFunction() = default;
     CallFunction(std::string name, const std::vector<std::unique_ptr<AST>>& args);
     [[nodiscard]] std::unique_ptr<AST> clone() const override;
+
     std::string name{};
     std::vector<std::unique_ptr<AST>> arguments{};
 };
@@ -81,6 +91,7 @@ struct CallMethod : public VisitableAST<CallMethod> {
     CallMethod() = default;
     CallMethod(std::unique_ptr<AST> object, std::string name, const std::vector<std::unique_ptr<AST>>& args);
     [[nodiscard]] std::unique_ptr<AST> clone() const override;
+
     std::unique_ptr<AST> object{ nullptr };
     std::string name{};
     std::vector<std::unique_ptr<AST>> arguments{};
@@ -89,6 +100,7 @@ struct Print : public VisitableAST<Print> {
     Print() = default;
     Print(std::string format, const std::vector<std::unique_ptr<AST>>& args);
     [[nodiscard]] std::unique_ptr<AST> clone() const override;
+
     std::string format{};
     std::vector<std::unique_ptr<AST>> arguments{};
 };
@@ -96,23 +108,33 @@ struct Block : public VisitableAST<Block> {
     Block() = default;
     explicit Block(const std::vector<std::unique_ptr<AST>>& stms);
     [[nodiscard]] std::unique_ptr<AST> clone() const override;
+
     std::vector<std::unique_ptr<AST>> stms{};
 };
 struct Top : public VisitableAST<Top> {
     Top() = default;
     explicit Top(const std::vector<std::unique_ptr<AST>>& stms);
     [[nodiscard]] std::unique_ptr<AST> clone() const override;
+
     std::vector<std::unique_ptr<AST>> stms{};
 };
-//    struct Loop : public VisitableAST<Loop> {
-//        std::unique_ptr<AST> condition{};
-//        std::unique_ptr<AST> body{};
-//    };
-//    struct Conditional : public VisitableAST<Conditional> {
-//        std::unique_ptr<AST> condition{};
-//        std::unique_ptr<AST> consequent{};
-//        std::unique_ptr<AST> alternative{};
-//    };
+struct Loop : public VisitableAST<Loop> {
+    Loop() = default;
+    Loop(std::unique_ptr<AST> condition, std::unique_ptr<AST> body);
+    [[nodiscard]] std::unique_ptr<AST> clone() const override;
+
+    std::unique_ptr<AST> condition{};
+    std::unique_ptr<AST> body{};
+};
+struct Conditional : public VisitableAST<Conditional> {
+    Conditional() = default;
+    Conditional(std::unique_ptr<AST> condition, std::unique_ptr<AST> consequent, std::unique_ptr<AST> alternative);
+    [[nodiscard]] std::unique_ptr<AST> clone() const override;
+
+    std::unique_ptr<AST> condition{};
+    std::unique_ptr<AST> consequent{};
+    std::unique_ptr<AST> alternative{};
+};
 } // namespace ast
 
 class Visitor {
@@ -129,6 +151,8 @@ class Visitor {
     virtual std::unique_ptr<ast::AST> visit(const ast::Function* visitable) = 0;
     virtual std::unique_ptr<ast::AST> visit(const ast::CallFunction* visitable) = 0;
     virtual std::unique_ptr<ast::AST> visit(const ast::Block* visitable) = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::Loop* visitable) = 0;
+    virtual std::unique_ptr<ast::AST> visit(const ast::Conditional* visitable) = 0;
 };
 
 namespace ast {

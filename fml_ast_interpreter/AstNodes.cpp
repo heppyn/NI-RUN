@@ -79,4 +79,16 @@ Top::Top(const std::vector<std::unique_ptr<AST>>& stms) {
         this->stms.emplace_back(a->clone());
     }
 }
+std::unique_ptr<AST> Loop::clone() const {
+    return std::make_unique<Loop>(condition->clone(), body->clone());
+}
+Loop::Loop(std::unique_ptr<AST> condition, std::unique_ptr<AST> body)
+  : condition(std::move(condition)), body(std::move(body)) {
+}
+std::unique_ptr<AST> Conditional::clone() const {
+    return std::make_unique<Conditional>(condition->clone(), consequent->clone(), alternative->clone());
+}
+Conditional::Conditional(std::unique_ptr<AST> condition, std::unique_ptr<AST> consequent, std::unique_ptr<AST> alternative)
+  : condition(std::move(condition)), consequent(std::move(consequent)), alternative(std::move(alternative)) {
+}
 } // namespace ast

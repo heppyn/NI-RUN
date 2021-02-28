@@ -27,6 +27,8 @@ class ExecVisitor : public Visitor {
     std::unique_ptr<ast::AST> visit(const ast::Function* visitable) override;
     std::unique_ptr<ast::AST> visit(const ast::CallFunction* visitable) override;
     std::unique_ptr<ast::AST> visit(const ast::Block* visitable) override;
+    std::unique_ptr<ast::AST> visit(const ast::Loop* visitable) override;
+    std::unique_ptr<ast::AST> visit(const ast::Conditional* visitable) override;
 
   private:
     std::unique_ptr<ast::AST> evaluate(const ast::AST* stm);

@@ -111,6 +111,21 @@ ast::AST* AstParser::parseNode(const rapidjson::Value& node) {
         stm->stms = parseNodes(node["Block"].GetArray());
         return stm;
     }
+    if (node.HasMember("Loop")) {
+        const auto& child = node["Loop"].GetObject();
+        auto* stm = new ast::Loop;
+        stm->condition = std::unique_ptr<ast::AST>(parseNode(child, "condition"));
+        stm->condition = std::unique_ptr<ast::AST>(parseNode(child, "body"));
+        return stm;
+    }
+    if (node.HasMember("Conditional")) {
+        const auto& child = node["Conditional"].GetObject();
+        auto* stm = new ast::Conditional;
+        stm->condition = std::unique_ptr<ast::AST>(parseNode(child, "condition"));
+        stm->consequent = std::unique_ptr<ast::AST>(parseNode(child, "consequent"));
+        stm->alternative = std::unique_ptr<ast::AST>(parseNode(child, "alternative"));
+        return stm;
+    }
 
 
     // should not be found anywhere - check at last

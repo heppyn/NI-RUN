@@ -1,12 +1,23 @@
 print("Hello ~ ~ ~\n", 1, false, null);
 let a = 1;
+let c = 42;
 a <- 2;
 print("Value of a is ~\n", a);
 
 function f(a) -> begin
     print("Executing function f\n");
+    print("Global c is ~\n", c);
     let b = null;
     b <- a;
 end;
 
-print("Value returned from f: ~\n", f(5));
+function truth(obj) -> begin
+    if obj then
+        print("Truth\n")
+    else
+        print("False\n");
+end;
+
+truth(0);
+
+// print("Value returned from f: ~\n", f(5));
