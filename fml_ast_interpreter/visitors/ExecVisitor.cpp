@@ -1,4 +1,5 @@
 #include "ExecVisitor.h"
+#include "scope_guard.hpp"
 #include <iostream>
 #include <memory>
 
@@ -116,10 +117,10 @@ std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::CallFunction* visitable)
     if (func->parameters.size() != visitable->arguments.size()) {
         std::cerr << "Provided wrong number of arguments. Provided: " << visitable->arguments.size()
                   << " Expected: " << func->parameters.size() << '\n';
-        // TODO: Fix - potentially leaking environments. Set has error instead of throw
         throw std::invalid_argument("Provided wrong number of arguments");
     }
     beginScope();
+    auto guard = sg::make_scope_guard([this]() { this->endScope(); }); // endScope()
     for (size_t i = 0; i < func->parameters.size(); i++) {
         // define parameters as new vars
         m_env->define(func->parameters[i], evaluate(visitable->arguments[i].get()));
@@ -128,19 +129,18 @@ std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::CallFunction* visitable)
     // execute function body
     auto res = evaluate(func->body.get());
 
-    endScope();
     return res;
 }
 std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Block* visitable) {
     //    std::cout << "Visiting Block" << std::endl;
     beginScope();
+    auto guard = sg::make_scope_guard([this]() { this->endScope(); }); // endScope()
+    std::unique_ptr<ast::AST> res = std::make_unique<ast::Null>();
     size_t i = 0;
-    for (; i < visitable->stms.size() - 1; i++) {
-        evaluate(visitable->stms[i].get());
+    for (; i < visitable->stms.size(); i++) {
+        res = evaluate(visitable->stms[i].get());
     }
-    auto res = evaluate(visitable->stms[i].get());
 
-    endScope();
     return res;
 }
 std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Loop* visitable) {

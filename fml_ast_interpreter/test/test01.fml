@@ -18,6 +18,19 @@ function truth(obj) -> begin
         print("False\n");
 end;
 
+let scoped = 10;
+function testScopes(num) -> begin
+    let scoped = num;
+    print("Scoped num is ~\n", scoped);
+    if num == 0 then begin end
+    else
+        begin
+            testScopes(0);
+        end;
+    print("Coming out of the scope, num is ~\n", scoped);
+end;
+
 truth(0);
+testScopes(5);
 
 // print("Value returned from f: ~\n", f(5));
