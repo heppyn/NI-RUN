@@ -22,7 +22,7 @@ let scoped = 10;
 function testScopes(num) -> begin
     let scoped = num;
     print("Scoped num is ~\n", scoped);
-    if num == 0 then begin end
+    if num then begin end
     else
         begin
             testScopes(0);
@@ -33,4 +33,4 @@ end;
 truth(0);
 testScopes(5);
 
-// print("Value returned from f: ~\n", f(5));
+print("Value returned from f: ~\n", f(5));
