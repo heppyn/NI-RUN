@@ -1,0 +1,20 @@
+let n = 5;
+begin
+    let n = 8;
+end;
+function bar() -> n;
+function foo(x) ->
+    begin
+        print("~\n", n);
+        let n = x;
+        print("~\n", n);
+        print("~\n", bar());
+        begin
+            n <- 42;
+            print("Should print 5 = ~\n", bar());
+            print("Should print 42 = ~\n", n);
+        end;
+        print("Should print 42 = ~\n", n);
+        bar();
+    end;
+print("Should print 5 = ~\n", foo(20));

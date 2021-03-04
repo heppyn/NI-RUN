@@ -103,7 +103,7 @@ std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::AccessVariable* visitabl
 std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::AssignVariable* visitable) {
     //    std::cout << "Visiting AssignVariable" << std::endl;
     auto val = evaluate(visitable->value.get());
-    m_env->set(visitable->name, evaluate(val.get()));
+    m_env->set(visitable->name, val->clone());
     return val;
 }
 std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Function* visitable) {
@@ -119,8 +119,16 @@ std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::CallFunction* visitable)
                   << " Expected: " << func->parameters.size() << '\n';
         throw std::invalid_argument("Provided wrong number of arguments");
     }
+    // if scope is possible to pass through, it should pass through it
+    m_env->setShouldPassThrough(true);
     beginScope();
-    auto guard = sg::make_scope_guard([this]() { this->endScope(); }); // endScope()
+    // any function call in this scope should ignore this environment
+    m_env->setCanPassThrough(true);
+    // function call done, scope should not be passed thru ane more
+    // order of guard definitions is important
+    auto passThruGuard = sg::make_scope_guard([this]() { this->m_env->setShouldPassThrough(false); });
+    auto scopeGuard = sg::make_scope_guard([this]() { this->endScope(); }); // endScope()
+
     for (size_t i = 0; i < func->parameters.size(); i++) {
         // define parameters as new vars
         m_env->define(func->parameters[i], evaluate(visitable->arguments[i].get()));
@@ -134,7 +142,10 @@ std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::CallFunction* visitable)
 std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Block* visitable) {
     //    std::cout << "Visiting Block" << std::endl;
     beginScope();
+    // any function call in this scope should ignore this environment
+    m_env->setCanPassThrough(true);
     auto guard = sg::make_scope_guard([this]() { this->endScope(); }); // endScope()
+
     std::unique_ptr<ast::AST> res = std::make_unique<ast::Null>();
     size_t i = 0;
     for (; i < visitable->stms.size(); i++) {
