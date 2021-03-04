@@ -50,6 +50,12 @@ std::unique_ptr<ast::AST> ExecVisitor::visit(const ast::Print* v) {
                 else if (v->format[i + 1] == 'n') {
                     std::cout << "\n";
                 }
+                else if (v->format[i + 1] == '"') {
+                    std::cout << "\"";
+                }
+                else if (v->format[i + 1] == 'r') {
+                    std::cout << "\r";
+                }
                 else if (v->format[i + 1] == 't') {
                     std::cout << "\t";
                 }
