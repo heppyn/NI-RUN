@@ -115,7 +115,7 @@ ast::AST* AstParser::parseNode(const rapidjson::Value& node) {
         const auto& child = node["Loop"].GetObject();
         auto* stm = new ast::Loop;
         stm->condition = std::unique_ptr<ast::AST>(parseNode(child, "condition"));
-        stm->condition = std::unique_ptr<ast::AST>(parseNode(child, "body"));
+        stm->body = std::unique_ptr<ast::AST>(parseNode(child, "body"));
         return stm;
     }
     if (node.HasMember("Conditional")) {
