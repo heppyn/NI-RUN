@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
                       << "Execute file by executable -r <file path>\n";
             return 0;
         }
-        if (strcmp(argv[1], "-r") == 0) {
+        if (strcmp(argv[1], "-r") == 0 || strcmp(argv[1], "run") == 0) {
             if (argc == 2) {
                 std::cout << "Specify file to be executed.\n";
                 return 1;
